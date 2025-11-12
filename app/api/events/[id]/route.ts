@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db/client';
-import { events } from '@/lib/db/schema';
-import { eq, ne, sql } from 'drizzle-orm';
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db/client";
+import { events } from "@/lib/db/schema";
+import { eq, ne, sql } from "drizzle-orm";
 
 type RouteParams = {
   params: {
@@ -17,13 +17,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const event = await db.select().from(events).where(eq(events.id, id));
 
     if (!event.length) {
-      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
     return NextResponse.json(event[0]);
   } catch (error) {
-    console.error('Error fetching event:', error);
-    return NextResponse.json({ error: 'Failed to fetch event' }, { status: 500 });
+    console.error("Error fetching event:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch event" },
+      { status: 500 },
+    );
   }
 }
 
@@ -31,27 +34,33 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
-    const userId = request.headers.get('x-user-id');
-    const isAdmin = request.headers.get('x-is-admin') === 'true';
+    const userId = request.headers.get("x-user-id");
+    const isAdmin = request.headers.get("x-is-admin") === "true";
     const body = await request.json();
 
     // Check if event exists
     const event = await db.select().from(events).where(eq(events.id, id));
     if (!event.length) {
-      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
     // Check authorization for admin-only changes
-    if (('isSpotlighted' in body || 'name' in body || 'description' in body) && !isAdmin) {
-      return NextResponse.json({ error: 'Only admins can modify event details' }, { status: 403 });
+    if (
+      ("isSpotlighted" in body || "name" in body || "description" in body) &&
+      !isAdmin
+    ) {
+      return NextResponse.json(
+        { error: "Only admins can modify event details" },
+        { status: 403 },
+      );
     }
 
     // Build update object based on provided fields
     const updateData: any = {};
-    
-    if ('isSpotlighted' in body) {
+
+    if ("isSpotlighted" in body) {
       updateData.isSpotlighted = body.isSpotlighted;
-      
+
       // If spotlighting this event, unspotlight all other events
       if (body.isSpotlighted === true) {
         await db
@@ -61,20 +70,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    if ('name' in body) {
+    if ("name" in body) {
       updateData.name = body.name;
     }
 
-    if ('description' in body) {
+    if ("description" in body) {
       updateData.description = body.description;
     }
-    
+
     // Allow any user to increment counters using atomic operations
     // Counters can be increments (e.g., {adults: 1}) or absolute values (for editing)
-    if ('adults' in body) {
+    if ("adults" in body) {
       const value = body.adults;
       // If it's a number, use atomic increment; otherwise it's an absolute value
-      if (typeof value === 'number' && value !== 0) {
+      if (typeof value === "number" && value !== 0) {
         updateData.adults = sql`${events.adults} + ${value}`;
       } else if (value === 0) {
         // Do nothing - don't update on 0 increment
@@ -82,9 +91,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         updateData.adults = value;
       }
     }
-    if ('kids' in body) {
+    if ("kids" in body) {
       const value = body.kids;
-      if (typeof value === 'number' && value !== 0) {
+      if (typeof value === "number" && value !== 0) {
         updateData.kids = sql`${events.kids} + ${value}`;
       } else if (value === 0) {
         // Do nothing
@@ -92,9 +101,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         updateData.kids = value;
       }
     }
-    if ('newsletterSignups' in body) {
+    if ("newsletterSignups" in body) {
       const value = body.newsletterSignups;
-      if (typeof value === 'number' && value !== 0) {
+      if (typeof value === "number" && value !== 0) {
         updateData.newsletterSignups = sql`${events.newsletterSignups} + ${value}`;
       } else if (value === 0) {
         // Do nothing
@@ -102,9 +111,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         updateData.newsletterSignups = value;
       }
     }
-    if ('volunteers' in body) {
+    if ("volunteers" in body) {
       const value = body.volunteers;
-      if (typeof value === 'number' && value !== 0) {
+      if (typeof value === "number" && value !== 0) {
         updateData.volunteers = sql`${events.volunteers} + ${value}`;
       } else if (value === 0) {
         // Do nothing
@@ -123,8 +132,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(updated[0]);
   } catch (error) {
-    console.error('Error updating event:', error);
-    return NextResponse.json({ error: 'Failed to update event' }, { status: 500 });
+    console.error("Error updating event:", error);
+    return NextResponse.json(
+      { error: "Failed to update event" },
+      { status: 500 },
+    );
   }
 }
 
@@ -132,17 +144,23 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
-    const isAdmin = request.headers.get('x-is-admin') === 'true';
+    const isAdmin = request.headers.get("x-is-admin") === "true";
 
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Only admins can delete events' }, { status: 403 });
+      return NextResponse.json(
+        { error: "Only admins can delete events" },
+        { status: 403 },
+      );
     }
 
     await db.delete(events).where(eq(events.id, id));
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting event:', error);
-    return NextResponse.json({ error: 'Failed to delete event' }, { status: 500 });
+    console.error("Error deleting event:", error);
+    return NextResponse.json(
+      { error: "Failed to delete event" },
+      { status: 500 },
+    );
   }
 }

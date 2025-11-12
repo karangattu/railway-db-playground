@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:push": "drizzle-kit push:sqlite"
+    "db:push": "drizzle-kit push:sqlite",
+    "generate:icons": "node scripts/generate-icons-compat.js",
+    "pwa:setup": "npm run generate:icons && echo '✅ PWA setup complete!'"
   },
   "dependencies": {
     "@libsql/client": "^0.5.4",
@@ -25,6 +27,7 @@
     "autoprefixer": "^10.0.1",
     "drizzle-kit": "^0.20.0",
     "postcss": "^8",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }

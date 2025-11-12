@@ -1,8 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { Star, Edit2, Trash2, Save, X, Users, Baby, Mail, Heart } from 'lucide-react';
-import type { Event } from '@/lib/db/schema';
+import { useState, useCallback } from "react";
+import {
+  Star,
+  Edit2,
+  Trash2,
+  Save,
+  X,
+  Users,
+  Baby,
+  Mail,
+  Heart,
+} from "lucide-react";
+import type { Event } from "@/lib/db/schema";
 
 interface EventCardProps {
   event: Event;
@@ -12,44 +22,55 @@ interface EventCardProps {
   onSpotlight?: (eventId: string, isSpotlighted: boolean) => void;
 }
 
-export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: EventCardProps) {
+export function EventCard({
+  event,
+  isAdmin,
+  onUpdate,
+  onDelete,
+  onSpotlight,
+}: EventCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(event.name);
-  const [editDescription, setEditDescription] = useState(event.description || '');
+  const [editDescription, setEditDescription] = useState(
+    event.description || "",
+  );
 
-  const incrementCounter = useCallback(async (field: string) => {
-    try {
-      // Send increment amount of 1 instead of absolute value
-      // This prevents race conditions when multiple users increment simultaneously
-      const response = await fetch(`/api/events/${event.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': localStorage.getItem('userId') || '',
-          'x-is-admin': String(isAdmin),
-        },
-        body: JSON.stringify({
-          [field]: 1,  // Send increment amount, not absolute value
-        }),
-      });
+  const incrementCounter = useCallback(
+    async (field: string) => {
+      try {
+        // Send increment amount of 1 instead of absolute value
+        // This prevents race conditions when multiple users increment simultaneously
+        const response = await fetch(`/api/events/${event.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": localStorage.getItem("userId") || "",
+            "x-is-admin": String(isAdmin),
+          },
+          body: JSON.stringify({
+            [field]: 1, // Send increment amount, not absolute value
+          }),
+        });
 
-      if (response.ok) {
-        const updated = await response.json();
-        onUpdate(updated);
+        if (response.ok) {
+          const updated = await response.json();
+          onUpdate(updated);
+        }
+      } catch (error) {
+        console.error(`Failed to increment ${field}:`, error);
       }
-    } catch (error) {
-      console.error(`Failed to increment ${field}:`, error);
-    }
-  }, [event, isAdmin, onUpdate]);
+    },
+    [event, isAdmin, onUpdate],
+  );
 
   const handleSaveEdit = async () => {
     try {
       const response = await fetch(`/api/events/${event.id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': localStorage.getItem('userId') || '',
-          'x-is-admin': String(isAdmin),
+          "Content-Type": "application/json",
+          "x-user-id": localStorage.getItem("userId") || "",
+          "x-is-admin": String(isAdmin),
         },
         body: JSON.stringify({
           name: editName,
@@ -63,7 +84,7 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
         setIsEditing(false);
       }
     } catch (error) {
-      console.error('Failed to save event:', error);
+      console.error("Failed to save event:", error);
     }
   };
 
@@ -74,10 +95,10 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
 
     try {
       const response = await fetch(`/api/events/${event.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'x-user-id': localStorage.getItem('userId') || '',
-          'x-is-admin': String(isAdmin),
+          "x-user-id": localStorage.getItem("userId") || "",
+          "x-is-admin": String(isAdmin),
         },
       });
 
@@ -85,18 +106,22 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
         onDelete?.(event.id);
       }
     } catch (error) {
-      console.error('Failed to delete event:', error);
+      console.error("Failed to delete event:", error);
     }
   };
 
   if (isEditing) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-4 border border-gray-200">
-        <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">Edit Event</h3>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
+          Edit Event
+        </h3>
 
         <div className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Event Name
+            </label>
             <input
               type="text"
               value={editName}
@@ -107,7 +132,9 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
@@ -129,7 +156,7 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
           <button
             onClick={() => {
               setEditName(event.name);
-              setEditDescription(event.description || '');
+              setEditDescription(event.description || "");
               setIsEditing(false);
             }}
             className="flex-1 flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition text-sm md:text-base"
@@ -146,9 +173,13 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-4 hover:shadow-md transition-shadow">
       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-900 break-words">{event.name}</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-900 break-words">
+            {event.name}
+          </h2>
           {event.description && (
-            <p className="text-gray-600 mt-2 text-sm md:text-base">{event.description}</p>
+            <p className="text-gray-600 mt-2 text-sm md:text-base">
+              {event.description}
+            </p>
           )}
         </div>
 
@@ -158,10 +189,10 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
               onClick={() => onSpotlight?.(event.id, !event.isSpotlighted)}
               className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium transition text-sm md:text-base ${
                 event.isSpotlighted
-                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
-              title={event.isSpotlighted ? 'Remove spotlight' : 'Add spotlight'}
+              title={event.isSpotlighted ? "Remove spotlight" : "Add spotlight"}
             >
               <Star size={18} />
             </button>
@@ -189,10 +220,14 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
           <div className="flex justify-center mb-2">
             <Users size={24} className="text-blue-600" />
           </div>
-          <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">Adults</p>
-          <p className="text-2xl md:text-3xl font-bold text-blue-600 mb-3">{event.adults}</p>
+          <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">
+            Adults
+          </p>
+          <p className="text-2xl md:text-3xl font-bold text-blue-600 mb-3">
+            {event.adults}
+          </p>
           <button
-            onClick={() => incrementCounter('adults')}
+            onClick={() => incrementCounter("adults")}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-md transition text-sm md:text-base"
           >
             +1
@@ -204,10 +239,14 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
           <div className="flex justify-center mb-2">
             <Baby size={24} className="text-green-600" />
           </div>
-          <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">Kids</p>
-          <p className="text-2xl md:text-3xl font-bold text-green-600 mb-3">{event.kids}</p>
+          <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">
+            Kids
+          </p>
+          <p className="text-2xl md:text-3xl font-bold text-green-600 mb-3">
+            {event.kids}
+          </p>
           <button
-            onClick={() => incrementCounter('kids')}
+            onClick={() => incrementCounter("kids")}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-md transition text-sm md:text-base"
           >
             +1
@@ -219,10 +258,14 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
           <div className="flex justify-center mb-2">
             <Mail size={24} className="text-purple-600" />
           </div>
-          <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">Newsletter</p>
-          <p className="text-2xl md:text-3xl font-bold text-purple-600 mb-3">{event.newsletterSignups}</p>
+          <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">
+            Newsletter
+          </p>
+          <p className="text-2xl md:text-3xl font-bold text-purple-600 mb-3">
+            {event.newsletterSignups}
+          </p>
           <button
-            onClick={() => incrementCounter('newsletterSignups')}
+            onClick={() => incrementCounter("newsletterSignups")}
             className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-3 rounded-md transition text-sm md:text-base"
           >
             +1
@@ -234,10 +277,14 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
           <div className="flex justify-center mb-2">
             <Heart size={24} className="text-orange-600" />
           </div>
-          <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">Volunteers</p>
-          <p className="text-2xl md:text-3xl font-bold text-orange-600 mb-3">{event.volunteers}</p>
+          <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">
+            Volunteers
+          </p>
+          <p className="text-2xl md:text-3xl font-bold text-orange-600 mb-3">
+            {event.volunteers}
+          </p>
           <button
-            onClick={() => incrementCounter('volunteers')}
+            onClick={() => incrementCounter("volunteers")}
             className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-md transition text-sm md:text-base"
           >
             +1

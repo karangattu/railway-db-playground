@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // Get or create user ID from session storage (via cookie)
-  let userId = request.cookies.get('userId')?.value;
-  let isAdmin = request.cookies.get('isAdmin')?.value === 'true';
+  let userId = request.cookies.get("userId")?.value;
+  let isAdmin = request.cookies.get("isAdmin")?.value === "true";
 
   if (!userId) {
     userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -13,25 +13,25 @@ export function middleware(request: NextRequest) {
 
   // Add headers for API routes to use
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-user-id', userId);
-  requestHeaders.set('x-is-admin', String(isAdmin));
+  requestHeaders.set("x-user-id", userId);
+  requestHeaders.set("x-is-admin", String(isAdmin));
 
   // Set cookies for persistence
-  response.cookies.set('userId', userId, { 
+  response.cookies.set("userId", userId, {
     maxAge: 60 * 60 * 24 * 365, // 1 year
     httpOnly: false,
-    path: '/'
+    path: "/",
   });
 
-  response.cookies.set('isAdmin', String(isAdmin), { 
+  response.cookies.set("isAdmin", String(isAdmin), {
     maxAge: 60 * 60 * 24 * 365, // 1 year
     httpOnly: false,
-    path: '/'
+    path: "/",
   });
 
   return response;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
