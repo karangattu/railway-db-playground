@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/client';
 import { events } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, ne } from 'drizzle-orm';
 
 type RouteParams = {
   params: {
@@ -51,6 +51,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     
     if ('isSpotlighted' in body) {
       updateData.isSpotlighted = body.isSpotlighted;
+      
+      // If spotlighting this event, unspotlight all other events
+      if (body.isSpotlighted === true) {
+        await db
+          .update(events)
+          .set({ isSpotlighted: false, updatedAt: new Date() })
+          .where(ne(events.id, id));
+      }
     }
 
     if ('name' in body) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import type { Event } from '@/lib/db/schema';
 
 interface CreateEventFormProps {
@@ -51,62 +52,59 @@ export function CreateEventForm({ isAdmin, onEventCreated }: CreateEventFormProp
     }
   };
 
-  if (!isAdmin) {
-    return null;
-  }
-
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6 border-l-4 border-indigo-500">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Create Event</h2>
-      
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
+      <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">Create New Event</h3>
+
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-gray-700 font-semibold mb-2">Event Name *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Event Name *</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
             placeholder="Enter event name"
           />
         </div>
 
         <div>
-          <label className="block text-gray-700 font-semibold mb-2">Description</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="Enter event description"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+            placeholder="Event description (optional)"
             rows={3}
           />
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
           <input
             type="checkbox"
             id="spotlight"
             checked={isSpotlighted}
             onChange={(e) => setIsSpotlighted(e.target.checked)}
-            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+            className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
           />
-          <label htmlFor="spotlight" className="ml-2 text-gray-700 font-semibold">
+          <label htmlFor="spotlight" className="text-sm font-medium text-gray-700 cursor-pointer">
             Spotlight this event (visible to all users)
           </label>
         </div>
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition"
+          disabled={loading || !name.trim()}
+          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition text-sm md:text-base"
         >
+          <Plus size={20} />
           {loading ? 'Creating...' : 'Create Event'}
         </button>
       </form>

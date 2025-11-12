@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { LogOut, LogIn } from 'lucide-react';
 import { EventCard } from '@/components/EventCard';
 import { CreateEventForm } from '@/components/CreateEventForm';
 import type { Event } from '@/lib/db/schema';
@@ -143,26 +144,36 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
+          <div className="flex justify-between items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Event Counter</h1>
-              <p className="text-blue-100 mt-1">Real-time event tracking with admin controls</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Event Counter</h1>
+              <p className="text-gray-600 text-sm mt-1">Real-time event tracking</p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-blue-100 mb-2">User ID: {userId.substring(0, 12)}...</p>
+            <div className="flex flex-col md:flex-row items-end md:items-center gap-3">
+              <p className="text-xs md:text-sm text-gray-600">ID: {userId.substring(0, 10)}...</p>
               <button
                 onClick={toggleAdminMode}
-                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm md:text-base ${
                   isAdmin
-                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                    : 'bg-white text-blue-600 hover:bg-blue-50'
+                    ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
-                {isAdmin ? '👑 Admin Mode' : 'User Mode'}
+                {isAdmin ? (
+                  <>
+                    <LogOut size={18} />
+                    Exit Admin
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={18} />
+                    Admin Mode
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -170,9 +181,9 @@ export default function Home() {
       </header>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
             {error}
           </div>
         )}
@@ -183,18 +194,18 @@ export default function Home() {
         {/* Events List */}
         {loading ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">Loading events...</p>
+            <p className="text-gray-600">Loading events...</p>
           </div>
         ) : events.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-gray-600 text-lg">
-              {isAdmin ? 'No events created yet. Create one to get started!' : 'No spotlighted events available.'}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+            <p className="text-gray-600">
+              {isAdmin ? 'No events created yet. Create one above to get started.' : 'No events available at this time.'}
             </p>
           </div>
         ) : (
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              {isAdmin ? 'All Events' : 'Available Events'}
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
+              {isAdmin ? 'All Events' : 'Events'}
             </h2>
             {events.map(event => (
               <EventCard
@@ -208,18 +219,8 @@ export default function Home() {
             ))}
           </div>
         )}
-
-        {/* Info Section */}
-        <div className="mt-8 bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-          <h3 className="text-lg font-bold text-gray-800 mb-3">How it works:</h3>
-          <ul className="text-gray-700 space-y-2">
-            <li>✨ <strong>Admins:</strong> Click the button in the top right to switch to admin mode, create events, and spotlight them</li>
-            <li>👥 <strong>Users:</strong> See only spotlighted events and can increment counters for adults, kids, newsletter signups, and volunteers</li>
-            <li>🔄 <strong>Real-time:</strong> All changes are persisted to the Turso database and visible to all users immediately</li>
-            <li>💾 <strong>Persistent:</strong> Event data survives page refreshes and is stored in the database</li>
-          </ul>
-        </div>
       </div>
     </main>
   );
 }
+
