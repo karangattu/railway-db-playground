@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Star, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Star, Edit2, Trash2, Save, X, Users, Baby, Mail, Heart } from 'lucide-react';
 import type { Event } from '@/lib/db/schema';
 
 interface EventCardProps {
@@ -19,7 +19,8 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
 
   const incrementCounter = useCallback(async (field: string) => {
     try {
-      const newValue = event[field as keyof Event] as number + 1;
+      // Send increment amount of 1 instead of absolute value
+      // This prevents race conditions when multiple users increment simultaneously
       const response = await fetch(`/api/events/${event.id}`, {
         method: 'PATCH',
         headers: {
@@ -28,7 +29,7 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
           'x-is-admin': String(isAdmin),
         },
         body: JSON.stringify({
-          [field]: newValue,
+          [field]: 1,  // Send increment amount, not absolute value
         }),
       });
 
@@ -185,6 +186,9 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {/* Adults Counter */}
         <div className="bg-blue-50 p-3 md:p-4 rounded-lg text-center border border-blue-100">
+          <div className="flex justify-center mb-2">
+            <Users size={24} className="text-blue-600" />
+          </div>
           <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">Adults</p>
           <p className="text-2xl md:text-3xl font-bold text-blue-600 mb-3">{event.adults}</p>
           <button
@@ -197,6 +201,9 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
 
         {/* Kids Counter */}
         <div className="bg-green-50 p-3 md:p-4 rounded-lg text-center border border-green-100">
+          <div className="flex justify-center mb-2">
+            <Baby size={24} className="text-green-600" />
+          </div>
           <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">Kids</p>
           <p className="text-2xl md:text-3xl font-bold text-green-600 mb-3">{event.kids}</p>
           <button
@@ -209,6 +216,9 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
 
         {/* Newsletter Signups Counter */}
         <div className="bg-purple-50 p-3 md:p-4 rounded-lg text-center border border-purple-100">
+          <div className="flex justify-center mb-2">
+            <Mail size={24} className="text-purple-600" />
+          </div>
           <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">Newsletter</p>
           <p className="text-2xl md:text-3xl font-bold text-purple-600 mb-3">{event.newsletterSignups}</p>
           <button
@@ -221,6 +231,9 @@ export function EventCard({ event, isAdmin, onUpdate, onDelete, onSpotlight }: E
 
         {/* Volunteers Counter */}
         <div className="bg-orange-50 p-3 md:p-4 rounded-lg text-center border border-orange-100">
+          <div className="flex justify-center mb-2">
+            <Heart size={24} className="text-orange-600" />
+          </div>
           <p className="text-xs md:text-sm font-semibold text-gray-600 mb-2">Volunteers</p>
           <p className="text-2xl md:text-3xl font-bold text-orange-600 mb-3">{event.volunteers}</p>
           <button

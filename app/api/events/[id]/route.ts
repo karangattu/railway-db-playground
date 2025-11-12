@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/client';
 import { events } from '@/lib/db/schema';
-import { eq, ne } from 'drizzle-orm';
+import { eq, ne, sql } from 'drizzle-orm';
 
 type RouteParams = {
   params: {
@@ -69,18 +69,48 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updateData.description = body.description;
     }
     
-    // Allow any user to increment counters (increment fields)
+    // Allow any user to increment counters using atomic operations
+    // Counters can be increments (e.g., {adults: 1}) or absolute values (for editing)
     if ('adults' in body) {
-      updateData.adults = body.adults;
+      const value = body.adults;
+      // If it's a number, use atomic increment; otherwise it's an absolute value
+      if (typeof value === 'number' && value !== 0) {
+        updateData.adults = sql`${events.adults} + ${value}`;
+      } else if (value === 0) {
+        // Do nothing - don't update on 0 increment
+      } else {
+        updateData.adults = value;
+      }
     }
     if ('kids' in body) {
-      updateData.kids = body.kids;
+      const value = body.kids;
+      if (typeof value === 'number' && value !== 0) {
+        updateData.kids = sql`${events.kids} + ${value}`;
+      } else if (value === 0) {
+        // Do nothing
+      } else {
+        updateData.kids = value;
+      }
     }
     if ('newsletterSignups' in body) {
-      updateData.newsletterSignups = body.newsletterSignups;
+      const value = body.newsletterSignups;
+      if (typeof value === 'number' && value !== 0) {
+        updateData.newsletterSignups = sql`${events.newsletterSignups} + ${value}`;
+      } else if (value === 0) {
+        // Do nothing
+      } else {
+        updateData.newsletterSignups = value;
+      }
     }
     if ('volunteers' in body) {
-      updateData.volunteers = body.volunteers;
+      const value = body.volunteers;
+      if (typeof value === 'number' && value !== 0) {
+        updateData.volunteers = sql`${events.volunteers} + ${value}`;
+      } else if (value === 0) {
+        // Do nothing
+      } else {
+        updateData.volunteers = value;
+      }
     }
 
     updateData.updatedAt = new Date();
