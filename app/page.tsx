@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { LogOut, LogIn } from "lucide-react";
+import HapticsToggle from '@/components/HapticsToggle';
 import { EventCard } from "@/components/EventCard";
 import { CreateEventForm } from "@/components/CreateEventForm";
 import type { Event } from "@/lib/db/schema";
@@ -204,6 +205,8 @@ export default function Home() {
                   </>
                 )}
               </button>
+              {/* Haptics toggle */}
+              <HapticsToggle />
             </div>
           </div>
         </div>

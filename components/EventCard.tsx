@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useHaptics } from "./HapticsProvider";
 import {
   Star,
   Edit2,
@@ -35,12 +36,22 @@ export function EventCard({
     event.description || "",
   );
 
+  const { enabled: hapticsEnabled } = useHaptics();
+
   const incrementCounter = useCallback(
     async (field: string) => {
       // Provide short immediate haptic feedback on supported devices on click
       try {
-        if (typeof navigator !== "undefined" && (navigator as any).vibrate) {
-          // Small immediate pulse for click
+        if (
+          hapticsEnabled &&
+          typeof navigator !== "undefined" &&
+          (navigator as any).vibrate &&
+          typeof document !== "undefined" &&
+          document.visibilityState === "visible" &&
+          document.hasFocus &&
+          document.hasFocus()
+        ) {
+          // Small immediate pulse for click (only if user enabled haptics)
           (navigator as any).vibrate(10);
         }
       } catch (e) {
@@ -64,13 +75,26 @@ export function EventCard({
         if (response.ok) {
           const updated = await response.json();
           onUpdate(updated);
-
-          // Vibrate to provide haptic feedback on mobile devices
+          // Vibrate to provide haptic feedback on mobile devices (confirmation)
           // Use a short vibration only when the increment succeeds
           try {
-            if (typeof navigator !== "undefined" && (navigator as any).vibrate) {
+            if (
+              hapticsEnabled &&
+              typeof navigator !== "undefined" &&
+              (navigator as any).vibrate &&
+              typeof document !== "undefined" &&
+              document.visibilityState === "visible" &&
+              document.hasFocus &&
+              document.hasFocus()
+            ) {
               // 50ms vibration for a small haptic cue
               (navigator as any).vibrate(50);
+            } else if (hapticsEnabled) {
+              // If we expect haptics to work but vibrate is not available, log it.
+              // This helps debugging on Android Chrome where device or browser may block haptics.
+              if (typeof navigator !== "undefined" && !(navigator as any).vibrate) {
+                console.debug("Haptics enabled, but navigator.vibrate is not available on this device/browser.");
+              }
             }
           } catch (e) {
             // Ignore if vibration is unavailable or throws
