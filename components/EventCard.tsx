@@ -37,6 +37,15 @@ export function EventCard({
 
   const incrementCounter = useCallback(
     async (field: string) => {
+      // Provide short immediate haptic feedback on supported devices on click
+      try {
+        if (typeof navigator !== "undefined" && (navigator as any).vibrate) {
+          // Small immediate pulse for click
+          (navigator as any).vibrate(10);
+        }
+      } catch (e) {
+        // Ignore if vibration is unavailable or throws
+      }
       try {
         // Send increment amount of 1 instead of absolute value
         // This prevents race conditions when multiple users increment simultaneously
@@ -55,6 +64,17 @@ export function EventCard({
         if (response.ok) {
           const updated = await response.json();
           onUpdate(updated);
+
+          // Vibrate to provide haptic feedback on mobile devices
+          // Use a short vibration only when the increment succeeds
+          try {
+            if (typeof navigator !== "undefined" && (navigator as any).vibrate) {
+              // 50ms vibration for a small haptic cue
+              (navigator as any).vibrate(50);
+            }
+          } catch (e) {
+            // Ignore if vibration is unavailable or throws
+          }
         }
       } catch (error) {
         console.error(`Failed to increment ${field}:`, error);
