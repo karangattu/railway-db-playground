@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useHaptics } from "./HapticsProvider";
 import {
-  Star,
   Edit2,
   Trash2,
   Save,
@@ -19,22 +18,23 @@ interface EventCardProps {
   event: Event;
   isAdmin: boolean;
   onUpdate: (updatedEvent: Event) => void;
+  onRefresh?: () => Promise<void>;
   onDelete?: (eventId: string) => void;
-  onSpotlight?: (eventId: string, isSpotlighted: boolean) => void;
 }
 
 export function EventCard({
   event,
   isAdmin,
   onUpdate,
+  onRefresh,
   onDelete,
-  onSpotlight,
 }: EventCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(event.name);
   const [editDescription, setEditDescription] = useState(
     event.description || "",
   );
+  const [editEventDate, setEditEventDate] = useState(event.eventDate || "");
 
   const { enabled: hapticsEnabled } = useHaptics();
 
@@ -119,12 +119,14 @@ export function EventCard({
         body: JSON.stringify({
           name: editName,
           description: editDescription,
+          eventDate: editEventDate,
         }),
       });
 
       if (response.ok) {
         const updated = await response.json();
         onUpdate(updated);
+        await onRefresh?.();
         setIsEditing(false);
       }
     } catch (error) {
@@ -148,6 +150,7 @@ export function EventCard({
 
       if (response.ok) {
         onDelete?.(event.id);
+        await onRefresh?.();
       }
     } catch (error) {
       console.error("Failed to delete event:", error);
@@ -187,6 +190,18 @@ export function EventCard({
               rows={3}
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Event Date
+            </label>
+            <input
+              type="date"
+              value={editEventDate}
+              onChange={(e) => setEditEventDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+            />
+          </div>
         </div>
 
         <div className="flex gap-3">
@@ -201,6 +216,7 @@ export function EventCard({
             onClick={() => {
               setEditName(event.name);
               setEditDescription(event.description || "");
+              setEditEventDate(event.eventDate || "");
               setIsEditing(false);
             }}
             className="flex-1 flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition text-sm md:text-base"
@@ -220,6 +236,22 @@ export function EventCard({
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 break-words">
             {event.name}
           </h2>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            {event.eventDate ? (
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-700">
+                {event.eventDate}
+              </span>
+            ) : (
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-500">
+                Date TBD
+              </span>
+            )}
+            {event.isSpotlighted && (
+              <span className="rounded-full bg-yellow-100 px-3 py-1 font-medium text-yellow-800">
+                Spotlighted
+              </span>
+            )}
+          </div>
           {event.description && (
             <p className="text-gray-600 mt-2 text-sm md:text-base">
               {event.description}
@@ -229,17 +261,6 @@ export function EventCard({
 
         {isAdmin && (
           <div className="flex gap-2 flex-shrink-0 w-full md:w-auto">
-            <button
-              onClick={() => onSpotlight?.(event.id, !event.isSpotlighted)}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium transition text-sm md:text-base ${
-                event.isSpotlighted
-                  ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-              title={event.isSpotlighted ? "Remove spotlight" : "Add spotlight"}
-            >
-              <Star size={18} />
-            </button>
             <button
               onClick={() => setIsEditing(true)}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg font-medium transition text-sm md:text-base"

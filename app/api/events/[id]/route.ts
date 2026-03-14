@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { events } from "@/lib/db/schema";
-import { eq, ne, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { applyAutomaticSpotlight } from "@/lib/events/spotlight";
 
 type RouteParams = {
   params: {
@@ -14,7 +15,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
 
-    const event = await db.select().from(events).where(eq(events.id, id));
+    const allEvents = await db.select().from(events);
+    const eventsWithSpotlight = applyAutomaticSpotlight(allEvents);
+    const event = eventsWithSpotlight.filter((currentEvent) => currentEvent.id === id);
 
     if (!event.length) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
@@ -34,7 +37,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
-    const userId = request.headers.get("x-user-id");
     const isAdmin = request.headers.get("x-is-admin") === "true";
     const body = await request.json();
 
@@ -45,10 +47,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check authorization for admin-only changes
-    if (
-      ("isSpotlighted" in body || "name" in body || "description" in body) &&
-      !isAdmin
-    ) {
+    if (("name" in body || "description" in body || "eventDate" in body) && !isAdmin) {
       return NextResponse.json(
         { error: "Only admins can modify event details" },
         { status: 403 },
@@ -58,24 +57,16 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Build update object based on provided fields
     const updateData: any = {};
 
-    if ("isSpotlighted" in body) {
-      updateData.isSpotlighted = body.isSpotlighted;
-
-      // If spotlighting this event, unspotlight all other events
-      if (body.isSpotlighted === true) {
-        await db
-          .update(events)
-          .set({ isSpotlighted: false, updatedAt: new Date() })
-          .where(ne(events.id, id));
-      }
-    }
-
     if ("name" in body) {
       updateData.name = body.name;
     }
 
     if ("description" in body) {
       updateData.description = body.description;
+    }
+
+    if ("eventDate" in body) {
+      updateData.eventDate = body.eventDate || null;
     }
 
     // Allow any user to increment counters using atomic operations
@@ -130,7 +121,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .where(eq(events.id, id))
       .returning();
 
-    return NextResponse.json(updated[0]);
+    const allEvents = await db.select().from(events);
+    const eventsWithSpotlight = applyAutomaticSpotlight(allEvents);
+    const updatedEvent = eventsWithSpotlight.find((event) => event.id === id);
+
+    return NextResponse.json(updatedEvent ?? updated[0]);
   } catch (error) {
     console.error("Error updating event:", error);
     return NextResponse.json(

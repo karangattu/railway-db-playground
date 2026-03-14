@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { events, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { applyAutomaticSpotlight } from "@/lib/events/spotlight";
 
-// Get all events (users see spotlighted, admins see all)
+// Get all events. Admins see every event, users only see the auto-spotlighted one.
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get("x-user-id");
@@ -13,18 +14,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let allEvents;
+    const allEvents = await db.select().from(events);
+
+    const eventsWithSpotlight = applyAutomaticSpotlight(allEvents);
+
     if (isAdmin) {
-      allEvents = await db.select().from(events);
-    } else {
-      // Non-admin users only see spotlighted events
-      allEvents = await db
-        .select()
-        .from(events)
-        .where(eq(events.isSpotlighted, true));
+      return NextResponse.json(eventsWithSpotlight);
     }
 
-    return NextResponse.json(allEvents);
+    return NextResponse.json(
+      eventsWithSpotlight.filter((event) => event.isSpotlighted),
+    );
   } catch (error) {
     console.error("Error fetching events:", error);
     return NextResponse.json(
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, isSpotlighted } = body;
+    const { name, description, eventDate } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -87,7 +87,8 @@ export async function POST(request: NextRequest) {
         id: eventId,
         name,
         description: description || "",
-        isSpotlighted: isSpotlighted || false,
+        eventDate: eventDate || null,
+        isSpotlighted: false,
         createdBy: userId,
         adults: 0,
         kids: 0,
@@ -96,7 +97,11 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json(newEvent[0], { status: 201 });
+    const allEvents = await db.select().from(events);
+    const eventsWithSpotlight = applyAutomaticSpotlight(allEvents);
+    const createdEvent = eventsWithSpotlight.find((event) => event.id === eventId);
+
+    return NextResponse.json(createdEvent ?? newEvent[0], { status: 201 });
   } catch (error) {
     console.error("Error creating event:", error);
     return NextResponse.json(

@@ -13,10 +13,6 @@ export default function Home() {
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(
-    null,
-  );
-
   // Initialize user session
   useEffect(() => {
     const initializeUser = async () => {
@@ -89,44 +85,24 @@ export default function Home() {
 
     // Poll for updates every 30 seconds to reduce API calls
     const interval = setInterval(fetchEvents, 30000);
-    setRefreshInterval(interval);
 
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [userId, isAdmin]);
 
-  const handleEventCreated = (newEvent: Event) => {
-    setEvents([newEvent, ...events]);
-  };
-
   const handleEventUpdate = (updatedEvent: Event) => {
-    setEvents(events.map((e) => (e.id === updatedEvent.id ? updatedEvent : e)));
+    setEvents((currentEvents) =>
+      currentEvents.map((event) =>
+        event.id === updatedEvent.id ? updatedEvent : event,
+      ),
+    );
   };
 
   const handleEventDelete = (eventId: string) => {
-    setEvents(events.filter((e) => e.id !== eventId));
-  };
-
-  const handleSpotlight = async (eventId: string, isSpotlighted: boolean) => {
-    try {
-      const response = await fetch(`/api/events/${eventId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId,
-          "x-is-admin": String(isAdmin),
-        },
-        body: JSON.stringify({ isSpotlighted }),
-      });
-
-      if (response.ok) {
-        const updated = await response.json();
-        handleEventUpdate(updated);
-      }
-    } catch (err) {
-      console.error("Failed to update spotlight status:", err);
-    }
+    setEvents((currentEvents) =>
+      currentEvents.filter((event) => event.id !== eventId),
+    );
   };
 
   const toggleAdminMode = async () => {
@@ -224,7 +200,7 @@ export default function Home() {
         {isAdmin && (
           <CreateEventForm
             isAdmin={isAdmin}
-            onEventCreated={handleEventCreated}
+            onEventCreated={fetchEvents}
           />
         )}
 
@@ -252,8 +228,8 @@ export default function Home() {
                 event={event}
                 isAdmin={isAdmin}
                 onUpdate={handleEventUpdate}
+                onRefresh={fetchEvents}
                 onDelete={handleEventDelete}
-                onSpotlight={handleSpotlight}
               />
             ))}
           </div>

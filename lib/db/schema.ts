@@ -15,6 +15,7 @@ export const events = sqliteTable("events", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  eventDate: text("event_date"),
   isSpotlighted: integer("is_spotlighted", { mode: "boolean" })
     .default(false)
     .notNull(),

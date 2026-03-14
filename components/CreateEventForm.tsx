@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import type { Event } from "@/lib/db/schema";
 
 interface CreateEventFormProps {
   isAdmin: boolean;
-  onEventCreated: (event: Event) => void;
+  onEventCreated: () => Promise<void>;
 }
 
 export function CreateEventForm({
@@ -15,7 +14,7 @@ export function CreateEventForm({
 }: CreateEventFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isSpotlighted, setIsSpotlighted] = useState(false);
+  const [eventDate, setEventDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,7 +34,7 @@ export function CreateEventForm({
         body: JSON.stringify({
           name,
           description,
-          isSpotlighted,
+          eventDate,
         }),
       });
 
@@ -43,11 +42,11 @@ export function CreateEventForm({
         throw new Error("Failed to create event");
       }
 
-      const newEvent = await response.json();
-      onEventCreated(newEvent);
+      await response.json();
+      await onEventCreated();
       setName("");
       setDescription("");
-      setIsSpotlighted(false);
+      setEventDate("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -95,20 +94,20 @@ export function CreateEventForm({
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="spotlight"
-            checked={isSpotlighted}
-            onChange={(e) => setIsSpotlighted(e.target.checked)}
-            className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-          />
-          <label
-            htmlFor="spotlight"
-            className="text-sm font-medium text-gray-700 cursor-pointer"
-          >
-            Spotlight this event (visible to all users)
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Event Date
           </label>
+          <input
+            type="date"
+            value={eventDate}
+            onChange={(e) => setEventDate(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            Leave blank for now. The app will automatically spotlight the dated
+            event closest to today.
+          </p>
         </div>
 
         <button
